@@ -6,7 +6,7 @@ function App() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [extractedText, setExtractedText] = useState("");
-  const [details, setDetails] = useState("");
+  const [details, setDetails] = useState(null);
   const [isEntering, setIsEntering] = useState(true);
   const fileInputRef = useRef(null);
   const resultsRef = useRef(null);
@@ -24,9 +24,7 @@ function App() {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
+    if (selectedFile) setFile(selectedFile);
   };
 
   const handleUpload = async () => {
@@ -37,16 +35,19 @@ function App() {
 
     setLoading(true);
     setExtractedText("");
-    setDetails("");
+    setDetails(null);
 
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/upload`, formData);
       const { extracted_text, data } = res.data;
       setExtractedText(extracted_text || "No text could be extracted from the document.");
-      setDetails(data || "No structured details could be extracted.");
+      setDetails(data || {});
     } catch (err) {
       const error = err.response?.data?.error || err.message;
-      setDetails(`Error: ${error}\n\nPlease make sure:\n1. The file is not password protected\n2. The file is in PDF or DOCX format\n3. The file contains readable text (not scanned images)`);
+      setDetails({
+        Error: error,
+        Note: "Please make sure:\n1. The file is not password protected\n2. The file is in PDF or DOCX format\n3. The file contains readable text (not scanned images)"
+      });
     } finally {
       setLoading(false);
     }
@@ -69,9 +70,7 @@ function App() {
     <div className="container">
       <div className="header">
         <h1>Resume Parser</h1>
-        <p className="subtitle">
-          Upload your resume to extract text and structured information
-        </p>
+        <p className="subtitle">Upload your resume to extract text and structured information</p>
       </div>
 
       <div className={`card upload-card ${isEntering ? 'entering' : ''}`}>
@@ -92,9 +91,7 @@ function App() {
             />
             <div className="file-label">
               <div className="file-icon">📄</div>
-              <div className="file-text">
-                {file ? file.name : 'Drag & drop or click to browse'}
-              </div>
+              <div className="file-text">{file ? file.name : 'Drag & drop or click to browse'}</div>
             </div>
           </div>
         </div>
@@ -136,7 +133,13 @@ function App() {
                     <h3>Structured Data</h3>
                   </div>
                   <div className="output-content">
-                    <pre className="output">{details}</pre>
+                    <ul className="output">
+                      {Object.entries(details).map(([key, value], idx) => (
+                        <li key={idx}>
+                          <strong>{key}:</strong> {value}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               </div>
