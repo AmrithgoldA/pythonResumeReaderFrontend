@@ -40,7 +40,7 @@ function App() {
     setDetails("");
 
     try {
-      const res = await axios.post("https://pythonresumereaderbackend.onrender.com/upload", formData);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/upload`, formData);
       const { extracted_text, data } = res.data;
       setExtractedText(extracted_text || "No text could be extracted from the document.");
       setDetails(data || "No structured details could be extracted.");
